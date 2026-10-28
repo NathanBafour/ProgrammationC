@@ -101,7 +101,8 @@ int main(int argc, char *argv[])
     }
 
     /* (4.c) À COMPLÉTER : afficher r (nom "R = A + B" ou "R = A x B").  */
-    
+    const char *expression = addition ? "R = A + B" : "R = A x B";
+    mat_afficher(expression, &r);
 
 
     /* FOURNI : enregistrement de r dans le fichier argv[4]. */
@@ -110,8 +111,9 @@ int main(int argc, char *argv[])
 
     /* (4.d) À COMPLÉTER : tout a réussi :
      *         - afficher "Résultat enregistré dans \"...\"." ;
-     *         - statut = EXIT_SUCCESS;                                 */
-
+     *         - statut = EXIT_SUCCESS;        
+     *                         */
+    
 
 nettoyage:
     /* FOURNI : point de sortie unique. Chaque matrice est détruite
