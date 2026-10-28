@@ -101,7 +101,7 @@ int main(int argc, char *argv[])
     }
 
     /* (4.c) À COMPLÉTER : afficher r (nom "R = A + B" ou "R = A x B").  */
-    const char *expression = addition ? "R = A + B" : "R = A x B";
+    const char *expression =  addition ? "R = A + B" : "R = A x B";
     mat_afficher(expression, &r);
 
 
