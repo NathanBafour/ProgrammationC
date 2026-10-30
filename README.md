@@ -50,6 +50,71 @@ Ce TD a pour objectifs :
 * **Gérer les erreurs :** renvoyer des codes d'erreur identiques pour chaque fonction, utiliser des tests et des workflows (github actions), ... . 
 
 
+## 3. Conception
+### 3.1 Découpage modulaire et architecture
+L'architecture de ce projet repose sur une arborescence stricte et un découpage modulaire respectant le principe de responsabilité unique. L'objectif est d'isoler les concepts (types de base, allocation, calculs, tests) pour faciliter la maintenance et la compilation séparée.
+
+### Arborescence du projet
+
+L'ensemble des fichiers est organisé au sein du répertoire `ProgrammationC/` de la manière suivante :
+
+```text
+ProgrammationC/
+├── matrice.h / matrice.c
+├── matrice_alloc.h / matrice_alloc.c
+├── matrice_io.h / matrice_io.c
+├── matrice_calcul.h / matrice_calcul.c
+├── main.c
+├── test_ex1.c
+├── test_ex2.c
+├── test_ex3.c
+└── donnees/
+    ├── A.txt
+    └── ...
+```
+### Rôle détaillé des fichiers
+
+*   **`matrice.h` et `matrice.c` :** 
+    Module qui définit le type Matrice, les codes d’erreur et les outils communs.
+
+*   **`matrice_alloc.h` et `matrice_alloc.c` :** 
+    Module qui gère la création et la déstruction d'une matrice.
+
+*   **`matrice_io.h` et `matrice_io.c` :** 
+    Module qui gère la lecture, l'écriture et l'affichage d'une matrice.
+
+*   **`matrice_calcul.h` et `matrice_calcul.c` :** 
+    Module qui effecture les calculs (addition, multiplication).
+
+*   **`main.c` :** 
+    fichier de démonstration (lit, calcule, enregistre).
+
+*   **`test_ex1.c`, `test_ex2.c`, `test_ex3.c` :** 
+    tests des exercices (fournis).
+
+### 3.2 Graphe des inclusions et gardes
+```mermaid
+graph TD
+    main.c --> matrice.h
+    main.c --> matrice_alloc.h
+    main.c --> matrice_io.h
+    main.c --> matrice_calcul.h
+
+    matrice.c --> matrice.h
+
+    matrice_alloc.c --> matrice_alloc.h
+    matrice_alloc.c --> matrice.h
+
+    matrice_io.c --> matrice_io.h
+    matrice_io.c --> matrice.h
+    matrice_io.c --> matrice_alloc.h
+
+    matrice_calcul.c --> matrice_calcul.h
+    matrice_calcul.c --> matrice.h
+    matrice_calcul.c --> matrice_alloc.h
+```
+*Figure 1 : Graphe des inclusions généré à partir des dépendances (gcc -MM)*
+## 7.Bilan, difficultés et organisation
 ### Travail remis
 À la remise du projet, nous avons mis au point tous les modules modules prévus, le makefile, et, chacun de ces modules compile sans erreur, sans avertissement, et sans fuite mémoire quelconque.
 
