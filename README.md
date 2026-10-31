@@ -476,7 +476,7 @@ Résultat console :
 
 On teste ici le programme `demo_matrices` sur différents scénarios comme demandé dans le sujet. 
 
-On présente ici 3 scénarios parmis les 10, dont 1 scénario d'erreur.
+On présente ici 3 scénarios parmi les 10, dont 1 scénario d'erreur.
 
 ---
 
@@ -521,6 +521,47 @@ Le comportement est bien celui attendu : les matrices utilisées en opérandes s
 ![Fichier R.txt contenant la matrice résultat sous la bonne forme](captures_section6/scenario1.png)
 ---
 
+### 6.2 Scénario 2 : Multiplication nominale ($A \times C$)
+
+Ce test vérifie que le produit matriciel entre une matrice $A$ de dimensions $4 \times 3$ et une matrice $C$ de dimensions $3 \times 2$ est correct. La matrice $R$ produite est  de dimensions $4 \times 2$.
+
+Il permet, entre autres, de valider :
+
+* la validité du programme en cas de mutliplication avec des matrices compatibles (3 colonnes pour $A$, 3 lignes pour $C$)
+* l'allocation d'une matrice résultat dont les dimensions sont différetentes des deux matrices d'entrée ($4 \times 2$)
+* le calcul des coeficients de la matrice résultant du produit entre deux matrices
+* (comme lors du test 1) l'écriture dans le fichier R.txt, d'une nouvelle matrice, avec de nouvelles dimensions
+
+
+**Commande exécutée :**
+```bash
+./demo_matrices mul donnees/A.txt donnees/C.txt R.txt
+echo $?
+```
+
+**Sortie console :**
+```text
+A (4 x 3) :
+       25       48       84
+       15       33       11
+       45       88       10
+        0       12       -5
+B (3 x 2) :
+        1        0
+        0        1
+        2       -1
+R = A x B (4 x 2) :
+      193      -36
+       37       22
+       65       78
+      -10       17
+Résultat enregistré dans "R.txt".
+0
+```
+
+Le comportement obtenu est celui attendu : le programme effectue bien le bon calcul pour trouver les coeficients corrects, produit la matrice résultat $4 \times 2$ attendue et quitte avec le code de retour `0` (donc réussite). 
+![Fichier R.txt contenant la matrice résultat sous la bonne forme](captures_section6/scenario2.png)
+---
 
 
 
