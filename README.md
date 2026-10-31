@@ -361,19 +361,119 @@ Bilan : 16 / 16 verifications reussies.
 
 ```
 
-Vérification des fuites mémoires avec Valgrind :
 
+
+## 5. Vérifications mémoire
+
+Pour garantir l'absence de fuite mémoire, on a testé tous les programmes avec Valgrind (option `--leak-check=full`).
+
+
+---
+
+### 5.1 Programme `test_ex1` (Allocation et destruction)
+
+```bash
+valgrind --leak-check=full ./test_ex1
+```
+
+Résultat console :
 ```text
-==225==
 ==225== HEAP SUMMARY:
 ==225==     in use at exit: 0 bytes in 0 blocks
 ==225==   total heap usage: 11 allocs, 11 frees, 1,228 bytes allocated
-==225==
+==225== 
 ==225== All heap blocks were freed -- no leaks are possible
-==225==
-==225== For lists of detected and suppressed errors, rerun with: -s
+==225== 
 ==225== ERROR SUMMARY: 0 errors from 0 contexts (suppressed: 0 from 0)
-
 ```
+
+---
+
+### 5.2 Programme `test_ex2` (Entrées-sorties)
+
+```bash
+valgrind --leak-check=full ./test_ex2
+```
+
+Résultat console :
+```text
+==228==
+==228== HEAP SUMMARY:
+==228==     in use at exit: 0 bytes in 0 blocks
+==228==   total heap usage: 51 allocs, 51 frees, 60,728 bytes allocated
+==228==
+==228== All heap blocks were freed -- no leaks are possible
+==228==
+==228== For lists of detected and suppressed errors, rerun with: -s
+==228== ERROR SUMMARY: 0 errors from 0 contexts (suppressed: 0 from 0)
+```
+
+---
+
+### 5.3 Programme `test_ex3` (Calcul matriciel)
+
+```bash
+valgrind --leak-check=full ./test_ex3
+```
+
+Résultat console :
+```text
+==229==
+==229== HEAP SUMMARY:
+==229==     in use at exit: 0 bytes in 0 blocks
+==229==   total heap usage: 37 allocs, 37 frees, 1,412 bytes allocated
+==229==
+==229== All heap blocks were freed -- no leaks are possible
+==229==
+==229== For lists of detected and suppressed errors, rerun with: -s
+==229== ERROR SUMMARY: 0 errors from 0 contexts (suppressed: 0 from 0)
+```
+
+---
+
+### 5.4 Programme `demo_matrices` : scénario nominal
+
+Scénartio testé : addition valide des matrices A et B :
+```bash
+valgrind --leak-check=full ./demo_matrices add donnees/A.txt donnees/B.txt R.txt
+```
+
+Résultat console :
+```text
+==230==
+==230== HEAP SUMMARY:
+==230==     in use at exit: 0 bytes in 0 blocks
+==230==   total heap usage: 22 allocs, 22 frees, 14,968 bytes allocated
+==230==
+==230== All heap blocks were freed -- no leaks are possible
+==230==
+==230== For lists of detected and suppressed errors, rerun with: -s
+==230== ERROR SUMMARY: 0 errors from 0 contexts (suppressed: 0 from 0)
+```
+
+---
+
+### 5.5 Programme `demo_matrices` : scénario d'erreur
+
+Le scénario d'erreur testé ici est un tentative d'addition avec dimensions incompatibles entre A de taille 4x3 et C de taille 3x2 :
+```bash
+valgrind --leak-check=full ./demo_matrices add donnees/A.txt donnees/C.txt R.txt
+```
+
+Résultat console :
+```text
+==231==
+==231== HEAP SUMMARY:
+==231==     in use at exit: 0 bytes in 0 blocks
+==231==   total heap usage: 14 allocs, 14 frees, 10,288 bytes allocated
+==231==
+==231== All heap blocks were freed -- no leaks are possible
+==231==
+==231== For lists of detected and suppressed errors, rerun with: -s
+==231== ERROR SUMMARY: 0 errors from 0 contexts (suppressed: 0 from 0)
+```
+
+
+
 
 ## 7.Bilan, difficultés et organisation
