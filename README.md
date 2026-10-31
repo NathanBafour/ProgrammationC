@@ -212,5 +212,168 @@ Par exemple : La commande équivalente au `make demo_matrices` est :
 ```
 gcc -std=c11 -Wall -Wextra -Wpedantic -g main.c matrice.c matrice_alloc.c matrice_io.c matrice_calcul.c -o demo_matrices
 ```
+## 4. Réalisation et validation exercice par exercice
+### 4.1 Exercice 1 : Allocation et destruction
+
+Cet exercice met en place la base du projet : structure matrice, allocation et libération sans fuite mémoire.
+
+#### 1. Code écrit et commenté
+
+##### Étape 1.a — `matrice.c` : Messages d'erreur
+On complète le `switch` pour traduire les codes d'erreur en message compréhensible.
+
+```c
+const char *mat_message_erreur(MatErreur code)
+{
+    switch (code) {
+    case MAT_OK:              return "succès";
+    case MAT_ERR_ARGUMENT:    return "argument invalide";
+    case MAT_ERR_ALLOCATION:  return "mémoire insuffisante";
+    case MAT_ERR_LECTURE:     return "erreur de lecture du fichier";
+    case MAT_ERR_FORMAT:      return "fichier mal formé";
+    case MAT_ERR_ECRITURE:    return "erreur d'écriture du fichier";
+    /* Étape 1.a */
+    case MAT_ERR_DIMENSIONS:  return "dimensions incompatibles pour l'opération";
+    case MAT_ERR_DEPASSEMENT: return "résultat hors de l'intervalle des int";
+    default:                  break;
+    }
+    return "erreur inconnue";
+}
+```
+
+##### Étape 1.b — `matrice.c` : Vérification de la matrice
+On vérifie que le pointeur n'est pas `NULL`, que `coef` pointe bien vers une zone allouée, et que les lignes et colonnes restent dans l'intervalle autorisé.
+
+```c
+int mat_est_valide(const Matrice *m)
+{
+    return m != NULL
+        && m->coef != NULL
+        && m->nb_lignes >= 1 && m->nb_lignes <= MAT_DIM_MAX
+        && m->nb_colonnes >= 1 && m->nb_colonnes <= MAT_DIM_MAX;
+}
+```
+
+##### Étape 1.c — `matrice_alloc.c` : Contrôle des arguments
+Avant d'allouer de la mémoire, on vérifie que les dimensions demandées sont valides.
+
+```c
+    /* Étape 1.c : vérification des bornes de taille */
+    if (nb_lignes < 1 || nb_lignes > MAT_DIM_MAX || nb_colonnes < 1 || nb_colonnes > MAT_DIM_MAX)
+        return MAT_ERR_ARGUMENT;
+```
+
+##### Étape 1.d — `matrice_alloc.c` : Allocation des lignes et nettoyage en cas d'échec
+On alloue les `nb_lignes` tableaux de coefficients. Si une erreur survient au milieu de l'allocation, on libère les lignes déjà obtenues avant de libérer le tableau principal `coef`. (prévention des fuites mémoire)
+
+```c
+    for (int i = 0; i < nb_lignes; i++) {
+        coef[i] = mat_calloc((size_t)nb_colonnes, sizeof *coef[i]);    // nb_colonnes entiers
+        if (coef[i] == NULL) {
+            for (int k = i - 1; k >= 0; k--)  // lignes déjà
+                free(coef[k]);                // obtenues
+            free(coef);                       // puis le tableau
+            return MAT_ERR_ALLOCATION;
+        }
+    }                                                             
+```
+
+##### Étape 1.e — `matrice_alloc.c` : Remplissage de la structure résultat
+Quand toutes les allocations ont réussi, on renseigne les champs de la matrice de retour et on valide avec `MAT_OK`.
+
+```c
+    res->coef = coef;
+    res->nb_lignes = nb_lignes;
+    res->nb_colonnes = nb_colonnes;
+    return MAT_OK;
+```
+
+##### Étape 1.f — `matrice_alloc.c` : Libération avec `mat_detruire`
+Si le pointeur matrice n'est pas NULL, on libère la matrice proprement : on parcourt chaque ligne pour faire un `free`, puis on libère le tableau de pointeurs `coef`. A la fin de la libération, on remet la structure à `MATRICE_VIDE`.
+
+```c
+void mat_detruire(Matrice *m)
+{
+    if (m == NULL)                 /* FOURNI */
+        return;
+        
+    if (m->coef != NULL) {
+        for (int i = 0; i <= (m->nb_lignes - 1); i++) {
+            free(m->coef[i]);
+        }
+        free(m->coef);
+    }
+
+    *m = MATRICE_VIDE;   /* FOURNI : état sûr après destruction (R6) */
+}
+```
+
+---
+
+#### 2. Réponses aux questions de réflexion
+
+- **Q3.1 Pourquoi `mat_detruire` prend-elle un `Matrice *` et non un `Matrice` ? Que se passerait-il, pour l'appelant, avec un passage par valeur ?**  
+  Si on passait la structure par valeur (`Matrice m`), la fonction recevrait seulement une copie des champs. La portée de cette copie étant locale, la mémoire pointée par `coef[i]` et `coef` serait libérée, mais l'affectation `*m = MATRICE_VIDE` ne modifierait que sa propre copie locale. 
+  
+  Dans la fonction appelante, la variable d'origine conserverait ses pointeurs vers des adresses mémoire déjà libérées. Le pointeur ne serait alors pas `NULL`. En cas de test pour vérifier si la matrice contient des données ou non (m.coef == NULL), on croirait donc que la matrice contient des données. Dès lors, il y aurait un risque de crash du programme (`seg fault`) en cas de réutilisation de la matrice. 
+  
+  En passant un pointeur `Matrice *m`, on peut directement modifier la variable originale et la réinitialiser à `MATRICE_VIDE` après la libération.
+
+- **Q3.2 Combien d'appels à `calloc` et à `free` faut-il pour une matrice $n \times p$ ? Si la $k$-ième allocation échoue, combien de libérations `mat_allouer` doit-elle effectuer ?**  
+  Pour créer une matrice, il faut $1 + n$ allocations au total (1 appel pour le tableau de pointeurs de lignes `coef`, puis $n$ appels pour les lignes d'entiers). À la destruction, il faut donc $1 + n$ appels à `free` dans l'ordre inverse de l'allocation. Si la $k$-ième allocation d'une ligne échoue, alors necessairement le tableau `coef` et les $k$ premières lignes (indices $0$ à $k-1$) ont été réservés sans plantage. Il faut donc faire $k + 1$ libérations (les $k$ lignes déjà allouées avec `free(coef[...])`, et, le tableau `coef` avec `free(coef)`)
+
+- **Q3.3 Appeler deux fois `free` sur la même adresse est un comportement indéfini. Pourquoi appeler deux fois `mat_detruire` sur la même matrice est-il sans danger ? Est-ce encore vrai si l'on a fait une copie `Matrice b = a;` puis appelé `mat_detruire(&a)` et `mat_detruire(&b)` ?**  
+  Un second appel sur la même variable ne pose pas de probleme car à la fin du premier appel à `mat_detruire` la structure a déjà été remise à `MATRICE_VIDE`, donc `m->coef` est  à `NULL`. Au moment du deuxième appel, le test `if (m->coef != NULL)` est donc faux et on ne re rentre pas dans la boucle de libération (donc aucun `free` n'est executé à nouveau). 
+  
+  En revanche, si on fait une copie `Matrice b = a;` (donc sans utiliser notre fonction de clone), on a copié directement les champs de la strcuture. Donc, les chams a.coef et b.coef pointent au même endroit en mémoire. Si on détruit `a` avec `mat_detruire(&a)`, alors la mémoire et libérée et on met `a` à `MATRICE_VIDE`, mais `b.coef` pointe vers la zone mémoire qu'on vient de libérer. Donc, un appel à  `mat_detruire(&b)` après la libération de a, va relancer `free` sur les mêmes adresses mémoire, ce qui provoque un comportement indéfini.
+
+- **Q3.4 Pourquoi `mat_allouer` commence-t-elle par l'affectation `*res = MATRICE_VIDE`, avant même de vérifier les dimensions ?**  
+  On fait cela pour assurer la sécurité et la bonne gestion des erreurs : si la fonction échoue, la variable de sortie de l'appelant est forcément dans un état stable. Sans cette réinitialisation , si l'appelant avait par exemeple passé une variable non initialisée et que la fonction s'arrêtait pour n'importe quelle raison, `res` contiendrait des données incohérentes. Il y aurait ensuite un risque de plantage si on tentait d'appeler `mat_detruire` ou `mat_est_valide` dessus.
+
+---
+
+#### 3. Résultat des tests
+
+Sortie console lors de l'exécution de `test_ex1` :
+
+```text
+=== Exercice 1 : matrice.c ===
+[OK]    (1.a) message pour MAT_ERR_DIMENSIONS
+[OK]    (1.a) message pour MAT_ERR_DEPASSEMENT
+[OK]    (1.b) une matrice 1 x 2 est valide
+[OK]    (1.b) NULL n'est pas valide
+[OK]    (1.b) MATRICE_VIDE n'est pas valide
+[OK]    (1.b) une matrice de 0 ligne n'est pas valide
+=== Exercice 1 : matrice_alloc.c ===
+[OK]    (1.c) mat_allouer refuse 0 ligne
+[OK]    (1.c) mat_allouer refuse -2 colonnes
+[OK]    (1.c) mat_allouer refuse une dimension > MAT_DIM_MAX
+[OK]    (1.e) mat_allouer(&m, 3, 4) renvoie MAT_OK
+[OK]    (1.e) m a 3 lignes et 4 colonnes
+[OK]    (1.d) tous les coefficients valent 0
+[OK]    (1.f) apres mat_detruire, m est vide
+[OK]    (1.f) un second mat_detruire est sans danger
+[OK]    (1.f) mat_detruire(NULL) ne plante pas
+=== Exercice 1 : echecs d'allocation simules ===
+[OK]    (1.d) chaque echec renvoie MAT_ERR_ALLOCATION et laisse *res vide
+
+Bilan : 16 / 16 verifications reussies.
+
+```
+
+Vérification des fuites mémoires avec Valgrind :
+
+```text
+==225==
+==225== HEAP SUMMARY:
+==225==     in use at exit: 0 bytes in 0 blocks
+==225==   total heap usage: 11 allocs, 11 frees, 1,228 bytes allocated
+==225==
+==225== All heap blocks were freed -- no leaks are possible
+==225==
+==225== For lists of detected and suppressed errors, rerun with: -s
+==225== ERROR SUMMARY: 0 errors from 0 contexts (suppressed: 0 from 0)
+
+```
 
 ## 7.Bilan, difficultés et organisation
