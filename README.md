@@ -27,7 +27,7 @@
    - [4.2 Exercice 2 : Entrées-sorties](#42-exercice-2--entrées-sorties)
    - [4.3 Exercice 3 : Calcul matriciel](#43-exercice-3--calcul-matriciel)
    - [4.4 Exercice 4 : Programme principal](#44-exercice-4--programme-principal)
-5. [Vérifications mémoire (Valgrind)](#5-vérifications-mémoire-valgrind)
+5. [Vérifications mémoire (Valgrind)](#5-vérifications-mémoire)
 6. [Démonstration finale](#6-démonstration-finale)
 7. [Bilan, difficultés et organisation](#7-bilan-difficultés-et-organisation)
 
@@ -472,6 +472,55 @@ Résultat console :
 ==231== For lists of detected and suppressed errors, rerun with: -s
 ==231== ERROR SUMMARY: 0 errors from 0 contexts (suppressed: 0 from 0)
 ```
+## 6. Démonstration finale
+
+On teste ici le programme `demo_matrices` sur différents scénarios comme demandé dans le sujet. 
+
+On présente ici 3 scénarios parmis les 10, dont 1 scénario d'erreur.
+
+---
+
+### 6.1 Scénario 1 : Addition ($A + B$)
+
+Ce test permet de valider plusieurs points : 
+* lecture de deux fichiers de matrices ($4 \times 3$)
+* vérification de la compatibilité des tailles
+* calcul de la somme
+* affichage 
+* sauvegarde dans un format correct, dans un fichier de sortie
+
+**Commande exécutée :**
+```bash
+./demo_matrices add donnees/A.txt donnees/B.txt R.txt
+echo $?
+```
+
+**Sortie obtenue :**
+```text
+A (4 x 3) :
+       25       48       84
+       15       33       11
+       45       88       10
+        0       12       -5
+B (4 x 3) :
+        1        2        3
+        4        5        6
+        7        8        9
+       10       11       12
+R = A + B (4 x 3) :
+       26       50       87
+       19       38       17
+       52       96       19
+       10       23        7
+Résultat enregistré dans "R.txt".
+0
+```
+
+Le comportement est bien celui attendu : les matrices utilisées en opérandes sont affichées, tout comme résultat (qui est aussi correct), le fichier `R.txt` est bien créé et contient bien la matrice résultant de l'addition, sous la bonne forme. Le code de retour est bien 0.
+
+![Fichier R.txt contenant la matrice résultat sous la bonne forme](captures_section6/scenario1.png)
+---
+
 
 
 
