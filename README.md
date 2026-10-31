@@ -29,6 +29,10 @@
    - [4.4 Exercice 4 : Programme principal](#44-exercice-4--programme-principal)
 5. [Vérifications mémoire (Valgrind)](#5-vérifications-mémoire)
 6. [Démonstration finale](#6-démonstration-finale)
+   - [6.1 Scénario 1 : addition](#61-scénario-1--addition-)
+   - [6.2 Scénario 2 : multiplication](#62-scénario-2--multiplication-)
+   - [6.3 Scénario 3 : erreur dimensions](#63-scénario-3--scénario-derreur--addition-avec-dimensions-incompatibles-)
+   - [6.4 Scénario 4 : erreur fichier mal formé](#64-scénario-4--scénario-derreur---fichier-mal-formé-)
 7. [Bilan, difficultés et organisation](#7-bilan-difficultés-et-organisation)
 
 ---
