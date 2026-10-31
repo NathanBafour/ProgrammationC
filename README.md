@@ -435,7 +435,7 @@ Une fois tous les entiers lus avec succès, on copie la structure temporaire dan
 
 ---
 
-#### 2. Réponses aux questions de réflexion (sujet 4.5)
+#### 2. Réponses aux questions de réflexion
 
 - **Q4.1 Pourquoi `mat_lire` remplit-elle d'abord une matrice locale avant de l'affecter à `*res` ?**
   D'après les règles définies dans le sujet, une fonction qui échoue doit laisser la variable résultat de l'appelant dans un état stable (`MATRICE_VIDE`). Si l'on écrivait directement dans `*res`, une erreur au milieu du fichier laisserait `*res` dans un état instable (partiellement allouée), ce qui irait à l'encontre de la règle fixée. En travaillant sur la variable locale `tmp`, en cas d'erreur de lecture, `mat_lire` détruit proprement `tmp` et retourne en laissant `*res` vide.
