@@ -898,3 +898,25 @@ Le comportement obtenu est celui attendu : nous obtenons une erreur qui correspo
 
 
 ## 7.Bilan, difficultés et organisation
+
+### Ce que nous avons compris et difficultés rencontrées
+Ce projet nous a permis de mettre en oeuvre des notions évoquées en TD (programmation modulaire, bon principes de programmation, principe de responsabilité unique, pointeurs, utilisation de la technique de l'affirmation initiale, puis des affirmations pointeurs pour décortiquer un type complexe, manipulation de flux et des focntions entrée sortie, gestion de la mémoire,  ...). 
+
+La principale difficulté a concerné la compréhension de la notion de dépassements d'entiers, et de la méthode pour contrer ce phénomène. Nous pensions initialement qu'il suffisait d'effectuer le calcul et de comparer le résultat avec les opérandes pour vérifier s'il avait été tronqué. Nous avons compris que le dépassement sur un entier est un comportement indéfini que le compilateur optimise en supprimant le test que nous aurions alors voulu mettre en place, (et qui devient en plus faux si des valeurs sont négatives). 
+Pour résoudre ce problème, la solution proposée par le sujet était d'utilsier un transtypage en `long long` puis d'ajouter un contrôle d'écrire le nouveau coefficient.
+
+ Une seconde difficulté a été la gestion des échecs partiels d'allocation dans `mat_allouer`, résolue en désallouant méthodiquement toutes les lignes déjà réservées avant de libérer le tableau de pointeurs pour éviter toute fuite sous Valgrind.
+
+ La question de reflexion sur `const` nous a également permis de nous pencher sur le fonctionnement en profondeur de ce qualificateur.
+
+### Répartition du travail
+- **Matthieu BAILS--AZAMA** : Exercices 2 et 3
+- **Nathan BAFOUR** : Exercice 1 et rédaction du compte rendu
+- **Gabin GIRODON :** Exercice 4 et rédaction du compte rendu 
+- **Tous :** Relecture et compréhension de la partie des autres, et relecture totale du compte rendu.
+
+
+### Aides extérieures
+- **IA :** utilisé comme assistant d'explication (`man`) pour clarifier les points conceptuellement difficiles à comprendre (dépassement d'entier, compréhension des niveaux d'indirection du mot-clé `const`), ainsi que pour la relecture et la correction de l'orthographe du compte-rendu.
+- **Articles & Pages WEB** : En particulier [cette page WEB sur les pièges du développement C](https://nicolasj.developpez.com/articles/pieges/)
+- **Forums** : Stack Overflow et Reddit
