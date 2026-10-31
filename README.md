@@ -560,6 +560,8 @@ Résultat enregistré dans "R.txt".
 ```
 
 Le comportement obtenu est celui attendu : le programme effectue bien le bon calcul pour trouver les coeficients corrects, produit la matrice résultat $4 \times 2$ attendue et quitte avec le code de retour `0` (donc réussite). 
+
+
 ![Fichier R.txt contenant la matrice résultat sous la bonne forme](captures_section6/scenario2.png)
 ---
 
