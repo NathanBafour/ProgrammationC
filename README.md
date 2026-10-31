@@ -29,6 +29,10 @@
    - [4.4 Exercice 4 : Programme principal](#44-exercice-4--programme-principal)
 5. [Vérifications mémoire (Valgrind)](#5-vérifications-mémoire)
 6. [Démonstration finale](#6-démonstration-finale)
+   - [6.1 Scénario 1 : addition](#61-scénario-1--addition-)
+   - [6.2 Scénario 2 : multiplication](#62-scénario-2--multiplication-)
+   - [6.3 Scénario 3 : erreur dimensions](#63-scénario-3--scénario-derreur--addition-avec-dimensions-incompatibles-)
+   - [6.4 Scénario 4 : erreur fichier mal formé](#64-scénario-4--scénario-derreur---fichier-mal-formé-)
 7. [Bilan, difficultés et organisation](#7-bilan-difficultés-et-organisation)
 
 ---
@@ -727,6 +731,23 @@ Le comportement observé est encore celui attendu : le calcul n'est pas fait car
 
 ---
 
+### 6.4 Scénario 4 : Scénario d'erreur —  Fichier mal formé ($A \times invalide$)
+Ce test nous permet de vérifier que le calcul échoue lorsque l'on essaye d'utiliser une matrice dont le format est invalide (`invalide.txt`) et que nous interrompons correctement le programme en cas d'échec de lecture.
+
+![Fichier A.txt et fichier invalide.txt](captures_section6/scenario4.png)
+
+**Commande exécutée :**
+```bash
+./demo_matrices add donnees/A.txt donnees/invalide.txt R.txt
+echo $?
+```
+
+**Sortie obtenue :**
+```text
+Erreur : lecture de "donnees/invalide.txt" : fichier mal formé
+1
+```
+Le comportement obtenu est celui attendu : nous obtenons une erreur qui correspond à `MAT_ERR_FORMAT`. Cette erreur est détectée par la fonction `lire_entier()`, puis propagée par la fonction `mat_lire()` jusqu'au programme principal.
 
 
 
