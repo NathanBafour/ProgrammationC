@@ -360,6 +360,133 @@ Sortie console lors de l'exécution de `test_ex1` :
 Bilan : 16 / 16 verifications reussies.
 
 ```
+### 4.2 Exercice 2 : Entrées-sorties
+
+Cet exercice porte sur les entrées et sorties : affichage sur la sortie standard, lecture depuis un flux, écriture dans un flux...
+
+#### 1. Code écrit et commenté
+
+##### Étape 2.a — Afficher les coefficients (`mat_afficher`)
+On parcourt la matrice avec deux boucles imbriquées. Chaque entier est affiché sur 8 caractères alignés à droite (`%8d`) pour former des colonnes, et on saute une ligne à la fin de chaque rangée.
+
+```c
+    for (int i = 0; i < m->nb_lignes; i++) {
+        for (int j = 0; j < m->nb_colonnes; j++)
+            printf(" %8d", m->coef[i][j]);
+        putchar('\n');
+    }
+```
+
+##### Étape 2.b — Écrire les coefficients dans le fichier (`mat_ecrire`)
+On écrit les coefficients ligne par ligne en respectant le format demandé : pas d'espace avant le premier élément (`j == 0`), un seul espace devant les suivants, as d'espace avant le saut de ligne. À chaque appel d'une fonction d'écriture dans un flux, on vérifie la valeur de retour. De cette manière, on sécurise le code, si une erreur se produit sur une de ces fonctions. 
+
+```c
+    for (int i = 0; i < m->nb_lignes; i++) {
+        for (int j = 0; j < m->nb_colonnes; j++)
+            if (fprintf(f, j == 0 ? "%d" : " %d", m->coef[i][j]) < 0) return MAT_ERR_ECRITURE;
+        if (fputc('\n', f) == EOF)  return MAT_ERR_ECRITURE;
+    }
+```
+
+##### Étape 2.c — Lire : vérifier les dimensions lues (`mat_lire`)
+Les dimensions sont lues au début du flux. Si le nombre de lignes ou de colonnes est hors des bornes prévues, on renvoie une erreur de format : `MAT_ERR_FORMAT`
+
+```c
+    if (nb_lignes < 1 || nb_lignes > MAT_DIM_MAX || nb_colonnes < 1 || nb_colonnes > MAT_DIM_MAX)
+        return MAT_ERR_FORMAT;
+```
+
+##### Étape 2.d — Lire : réserver une matrice locale (`mat_lire`)
+On réserve la mémoire dans une matrice locale `tmp`. Si l'allocation échoue, on renvoie le code d'erreur renvoyé par `mat_allouer`.  La matrice de sortie `*res`, a déjà été initialisée à `MATRICE_VIDE` au début du code.
+
+```c
+    Matrice tmp;
+    err = mat_allouer(&tmp, nb_lignes, nb_colonnes);
+    if (err != MAT_OK)
+        return err;
+```
+
+##### Étape 2.e — Lire : lire les coefficients (`mat_lire`)
+On lit les entiers un par un grace à la fonction interne `lire_entier`. Si `lire_entier` renvoie une erreur (coeficient manquant, dépassement d'entier...): on détruit la matrice locale `tmp` avec `mat_detruire(&tmp)` puis on retourne l'erreur.
+
+```c
+    for (int i = 0; i < nb_lignes; i++) {
+        for (int j = 0; j < nb_colonnes; j++) {
+            err = lire_entier(f, &tmp.coef[i][j]);
+            if (err != MAT_OK) {
+                mat_detruire(&tmp);
+                return err;
+            }
+        }
+    }
+```
+
+##### Étape 2.f — Lire : transférer le résultat (`mat_lire`)
+Une fois tous les entiers lus avec succès, on copie la structure temporaire dans `*res` (`*res = tmp;`). On renovie ensuite le code de succès MAT_OK.
+
+```c
+    *res = tmp;
+    return MAT_OK;
+```
+
+---
+
+#### 2. Réponses aux questions de réflexion (sujet 4.5)
+
+- **Q4.1 Pourquoi `mat_lire` remplit-elle d'abord une matrice locale avant de l'affecter à `*res` ?**
+  D'après les règles définies dans le sujet, une fonction qui échoue doit laisser la variable résultat de l'appelant dans un état stable (`MATRICE_VIDE`). Si l'on écrivait directement dans `*res`, une erreur au milieu du fichier laisserait `*res` dans un état instable (partiellement allouée), ce qui irait à l'encontre de la règle fixée. En travaillant sur la variable locale `tmp`, en cas d'erreur de lecture, `mat_lire` détruit proprement `tmp` et retourne en laissant `*res` vide.
+
+- **Q4.2 La lecture vérifie-t-elle que chaque ligne de la matrice est sur sa propre ligne de texte ? Est-ce gênant ? Justifiez le principe « tolérant en lecture, strict en écriture ».**
+  Non, `lire_entier` utilise `fscanf`. Donc, n'importe quel caractère comme espaces, tabulations, sauts de ligne, etc sera vu comme un délimiteur. Une matrice écrite sur une seule longue ligne sera donc lue sans aucune erreur. (C'est le même principe que pour le scanf classique, où le saut de ligne n'est pas obligatoire)
+  
+  Le principe appliqué ici est le principe de « tolérant en lecture, strict en écriture » :
+
+   - *Tolérant en lecture* : le programme accepte des fichiers saisis à la main ou mis en forme arbitrairement qui peuvent donc contenir tous types de délimiteurs. Ce qui compte, c'est que les valeurs soient valides.
+   - *Strict en écriture* : le programme génère un format canonique standardisé (un seul espace, pas d'esace en fin de ligne, ..., ) pour le traitement plus simple par la suite.
+
+- **Q4.3 Après l'appel `mat_lire(f, &m)`, le flux `f` est positionné après le dernier coefficient. Comment exploiter cette propriété pour stocker deux matrices dans un même fichier ?**
+  Comme `mat_lire` ne ferme pas le flux et s'arrête après le dernier entier de la matrice, le curseur du fichier est placé sur l'octet suivant. Pour enregistrer deux matrices dans un même fichier, il faut donc les écrire l'une après l'autre à la suite, c'est à dire appeler deux fois  `mat_ecrire` avec des matrices différentes mais le même flux. Pour les lire, on applique le même systeme mais avec `mat_lire`.
+
+- **Q4.4 Pourquoi `mat_ecrire` appelle-t-elle `fflush` avant de renvoyer `MAT_OK` ? Cela dispense-t-il l'appelant de tester `fclose` ?**
+  Quand on utilise une fonction d'entrée sortie sur un flux, les données sont stockées dans un buffer qui se vide quand il est plein. En appelant `fflush`, on force ce buffer à envoyer ses données au système, donc, en cas d'erreur, elle sera détectée plus tot et on peut renvoyer MAT_ERR_ECRITURE`.
+
+  L'appelant doit quand même tester `fclose` car les données ne sont écrite définitivemen qu'une fois le flux fermé.
+
+---
+
+#### 3. Résultat des tests
+
+Sortie obtenue à l'exécution de `test_ex2` :
+
+```text
+=== Exercice 2 : affichage (verification visuelle) ===
+M (4 x 3) :
+        1        2        3
+        4        5        6
+        7        8        9
+       10       11       12
+(2.a) Vous devez voir ci-dessus 4 lignes : 1 2 3 / 4 5 6 / 7 8 9 / 10 11 12
+=== Exercice 2 : ecriture ===
+[OK]    ouverture de test_ex2_sortie.txt en ecriture
+[OK]    (2.b) mat_ecrire renvoie MAT_OK
+[OK]    (2.b) le fichier contient exactement le format attendu
+[OK]    (2.b) mat_ecrire refuse une matrice vide
+=== Exercice 2 : relecture ===
+[OK]    (2.f) mat_lire relit le fichier : MAT_OK
+[OK]    (2.e) la matrice relue est identique
+[OK]    (2.e) espaces et sauts de ligne en trop sont toleres
+=== Exercice 2 : fichiers incorrects ===
+[OK]    (2.c) fichier vide
+[OK]    (2.c) dimension nulle
+[OK]    (2.c) dimension negative
+[OK]    (2.e) coefficient manquant
+[OK]    (2.e) donnee non numerique
+[OK]    (2.e) entier trop grand pour un int
+=== Exercice 2 : echec d'allocation simule ===
+[OK]    (2.d) mat_lire renvoie MAT_ERR_ALLOCATION proprement
+
+Bilan : 14 / 14 verifications reussies.
+```
 
 
 
@@ -529,7 +656,7 @@ Il permet, entre autres, de valider :
 
 * la validité du programme en cas de mutliplication avec des matrices compatibles (3 colonnes pour $A$, 3 lignes pour $C$)
 * l'allocation d'une matrice résultat dont les dimensions sont différetentes des deux matrices d'entrée ($4 \times 2$)
-* le calcul des coeficients de la matrice résultant du produit entre deux matrices
+* le calcul des coefficients de la matrice résultant du produit entre deux matrices
 * (comme lors du test 1) l'écriture dans le fichier R.txt, d'une nouvelle matrice, avec de nouvelles dimensions
 
 
@@ -559,7 +686,7 @@ Résultat enregistré dans "R.txt".
 0
 ```
 
-Le comportement obtenu est celui attendu : le programme effectue bien le bon calcul pour trouver les coeficients corrects, produit la matrice résultat $4 \times 2$ attendue et quitte avec le code de retour `0` (donc réussite). 
+Le comportement obtenu est celui attendu : le programme effectue bien le bon calcul pour trouver les coefficients corrects, produit la matrice résultat $4 \times 2$ attendue et quitte avec le code de retour `0` (donc réussite). 
 
 
 ![Fichier R.txt contenant la matrice résultat sous la bonne forme](captures_section6/scenario2.png)
