@@ -521,7 +521,7 @@ Le comportement est bien celui attendu : les matrices utilisées en opérandes s
 ![Fichier R.txt contenant la matrice résultat sous la bonne forme](captures_section6/scenario1.png)
 ---
 
-### 6.2 Scénario 2 : Multiplication nominale ($A \times C$)
+### 6.2 Scénario 2 : Multiplication ($A \times C$)
 
 Ce test vérifie que le produit matriciel entre une matrice $A$ de dimensions $4 \times 3$ et une matrice $C$ de dimensions $3 \times 2$ est correct. La matrice $R$ produite est  de dimensions $4 \times 2$.
 
@@ -563,6 +563,41 @@ Le comportement obtenu est celui attendu : le programme effectue bien le bon cal
 
 
 ![Fichier R.txt contenant la matrice résultat sous la bonne forme](captures_section6/scenario2.png)
+
+### 6.3 Scénario 3 : Scénario d'erreur — Addition avec dimensions incompatibles ($A + C$)
+
+Ce test vérifie le bon fonctionnement si on tente d'additionner la matrice $A$ ($4 \times 3$) et la matrice $C$ ($3 \times 2$). Le programme doit interdire l'opération car les dimensions sont incompatibles, renvoyer un message d'erreur sur `stderr`, ne créer aucun fichier et retourner un code d'échec.
+
+Il permet de valider :
+* la détection de l'incompatibilité des dimensions pour l'addition ($4 \times 3$ et $3 \times 2$) avant de tenter des calculs
+* le bon fonctionnement du systeme de message d'erreur 
+* la non création / écrasement du fichier de sortie `R.txt`
+* le `goto nettoyage;` qui assure la libération de $A$ et de $B$ sans fuite mémoire
+* le renvoi du code de retour `1` en cas d'erreur
+
+**Commande exécutée :**
+```bash
+./demo_matrices add donnees/A.txt donnees/C.txt R.txt
+echo $?
+```
+
+**Sortie obtenue :**
+```text
+A (4 x 3) :
+       25       48       84
+       15       33       11
+       45       88       10
+        0       12       -5
+B (3 x 2) :
+        1        0
+        0        1
+        2       -1
+Erreur calcul impossible : dimensions incompatibles pour l'opération (A: 4 x 3, B: 3 x 2)
+1
+```
+
+Le comportement observé est encore celui attendu : le calcul n'est pas fait car les dimensions sont incompatibles, le message d'erreur indique que l'erreur est due aux dimensions, aucun fichier n'est crée et le programme termine avec le code `1` (donc erreur).
+
 ---
 
 
