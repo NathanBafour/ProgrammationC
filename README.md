@@ -492,7 +492,153 @@ M (4 x 3) :
 Bilan : 14 / 14 verifications reussies.
 ```
 
+### 4.3 Exercice 3 : Calcul matriciel
 
+Cet exercice porte sur la mise en place des opérations supportées sur les matrices : l'addition et la multiplication. Les fonctions implémentées permettent d'additionner et de multiplier des matrices, en vérifiant la compatibilité des dimensions et en évitant les dépassements d'entiers.
+
+#### 1. Code écrit et commenté
+
+##### Étape 3.a — Addition : contrôler les dimensions (`mat_additionner`)
+L'addition matricielle nécessite que les deux matrices soient aux mêmes dimensions. Si on tente d'additionner des matrices de dimensions différentes, on retourne donc une erreur.
+
+```c
+    if (a->nb_lignes != b->nb_lignes || a->nb_colonnes != b->nb_colonnes)
+        return MAT_ERR_DIMENSIONS;
+```
+
+##### Étape 3.b — Addition : réserver le résultat (`mat_additionner`)
+La matrice résultat `r` est locale et dimensionnée selon la taille de `a`. Si l'allocation échoue, on retourne une erreur sans toucher à `*res`.
+
+```c
+    err = mat_allouer(&r, a->nb_lignes, a->nb_colonnes);
+    if (err != MAT_OK)
+        return err;
+```
+
+##### Étape 3.c — Addition : calculer chaque coefficient (`mat_additionner`)
+On additionne les coefficients $(i, j)$ avec un transtypage ver  `long long`. De cette manière, si l'addition entraine un débordement, on libère immédiatement la mémoire allouée à `r` avant de sortir de la fonction en retournant l'erreur de dépassement d'entier, sans tronquer le résultat (et donc obtenir un résultat  faux).
+
+```c
+    long long s = (long long)a->coef[i][j] + b->coef[i][j];
+    if (!tient_dans_int(s)) {
+        mat_detruire(&r);
+        return MAT_ERR_DEPASSEMENT;
+    }
+    r.coef[i][j] = (int)s;
+```
+
+##### Étape 3.d — Addition : transférer le résultat (`mat_additionner`)
+Quand tous les coefficients ont été calculés, on transfère le resultat à la matrice de sortie `*res`
+
+```c
+    *res = r;
+    return MAT_OK;
+```
+
+##### Étape 3.e — Multiplication : contrôler les dimensions (`mat_multiplier`)
+Le produit matriciel $A \times B$ n'est possible que si le nombre de colonnes de la première matrice est égal au nombre de lignes de la deuxieme matrice. On gère donc les éventuelles erreurs.
+
+```c
+    if (a->nb_colonnes != b->nb_lignes)
+        return MAT_ERR_DIMENSIONS;
+```
+
+##### Étape 3.f — Multiplication : réserver le résultat (`mat_multiplier`)
+Pour un produit entre deux matrices compatibles : $(n \times p) \times (p \times q)$, la matrice produite possède $n$ lignes et $q$ colonnes. On réserve donc la matrice résultat locale $r$ aux dimensions `(a->nb_lignes, b->nb_colonnes)`.
+
+```c
+    err = mat_allouer(&r, a->nb_lignes, b->nb_colonnes);
+    if (err != MAT_OK)
+        return err;
+```
+
+##### Étape 3.g — Multiplication : la somme des produits (`mat_multiplier`)
+On calcule chaque coefficient. Le produit intermédiaire est calculé en `long long`, comme pour l'addition. On vérifie ensuite deux choses : 
+
+* ajouter ce produit au résultat intermédiaire n'entraine pas de dépassement de capacité sur `long long` 
+* la somme finale tient bien dans un `int`. 
+
+En cas de débordement, on détruit $r$.
+
+```c
+    for (int k = 0; k < a->nb_colonnes; k++) {
+        long long p = (long long)a->coef[i][k] * b->coef[k][j];
+        if ((p > 0 && s > LLONG_MAX - p)
+            || (p < 0 && s < LLONG_MIN - p)) {
+            mat_detruire(&r);
+            return MAT_ERR_DEPASSEMENT;
+        }
+        s += p;
+    }
+
+    if (!tient_dans_int(s)) {
+        mat_detruire(&r);
+        return MAT_ERR_DEPASSEMENT;
+    }
+    r.coef[i][j] = (int)s;
+```
+
+##### Étape 3.h — Multiplication : transférer le résultat (`mat_multiplier`)
+Quand tous les coefficients ont été calculés, on transfère le resultat à la matrice de sortie `*res`
+
+```c
+    *res = r;
+    return MAT_OK;
+```
+
+---
+
+#### 2. Réponses aux questions de réflexion (sujet 5.7)
+
+- **Q5.1 Le paramètre `const Matrice *a` empêche-t-il d'écrire `a->coef[0][0] = 7;` ? Que protège exactement ce `const` ? Que faudrait-il changer pour que le compilateur refuse cette affectation ?**  
+  Non, `const Matrice *a` n'empêche pas de modifier `a->coef[0][0]`. Le `const` protège la structure `Matrice` pointée par `a` (donc les champs `nb_lignes`, `nb_colonnes` et le pointeur `coef`). Mais ont peut néamoins modifier les zones vers lesquelles pointent coef. 
+  
+  Pour que le compilateur refuse cette affectation, il faudrait déclarer les coefficients eux memes comme étant constants : `const int **coef` (mais alors coef[i] = X serait autorisé) ou `const int * const *coef` pour interdire totalement de modifier `coef[i][j]`.
+
+- **Q5.2 Pourquoi refuse-t-on l'appel `mat_additionner(&a, &b, &a)` alors que, mathématiquement, $a \leftarrow a+b$ a un sens ? Que se passerait-il avec notre implémentation si on l'acceptait ?**  
+  On refuse cet appel pour éviter d'écraser a avant d'avoir fait le preemier calcul. En effet, si l'on passait `&a` en paramètre `res`, la fonction commencerait par réinitialiser a : `*res = MATRICE_VIDE`, ce qui rendrait `a` illisible pour les calculs (et créerait une fuite mémoire car les lignes et le tableau coef n'auraient jamais été libéré). 
+
+- **Q5.3 Combien de multiplications d'entiers effectue `mat_multiplier` pour des matrices $n \times p$ et $p \times q$ ? Combien pour deux matrices $1000 \times 1000$ ?**  
+  Avec ces dimensions pour les matrices opérandes, la matrice résultat possèdera $n \times q$ cases. Pour une case donnée, le coefficient de cette case est calculé avec $p$ multiplications. Le nombre total de multiplications scalaires est donc égal à :  
+  $$\text{Nombre d'opérations} = \text{Nombre de cases de la matrice résultat} \times p = (n \times q)\times p$$  
+
+
+  Pour deux matrices carrées de taille $1000 \times 1000$ ($n = p = q = 1000$), le programme réalise :  
+  $$1000 \times 1000 \times 1000 = 10^9 \text{ multiplications (1 milliard de mutiplications).}$$
+
+- **Q5.4 Pourquoi ne suffit-il pas de calculer `int s = a + b;` puis de tester `s < a` pour détecter un dépassement ?**  
+
+Si le deuxième terme $b$ est négatif, la somme $a + b$ est forcément inférieure à $a$. La condition s < a est donc vraie sans dépassement, ce qui fausse le test.
+
+De plus en C, le dépassement est interdit. Lors de la compilation, le compilateur peut simplifier le code pour l'optimiser. Le dépassement étant inderdit, le compilateur part du principe que ce débordement n'arrive jamais : le test `s < a` sera donc supprimé à la compilation. 
+
+---
+
+#### 3. Résultat des tests
+
+Sortie console obtenue lors de l'exécution de la suite de tests unitaires `test_ex3` :
+
+```text
+=== Exercice 3 : addition ===
+[OK]    (3.a) (2 x 3) + (3 x 2) : MAT_ERR_DIMENSIONS
+[OK]    (3.d) (2 x 3) + (2 x 3) : MAT_OK
+[OK]    (3.c) a + b est correct
+[OK]    a et b n'ont pas ete modifiees
+[OK]    (3.b) le resultat possede sa propre memoire
+[OK]    (3.c) INT_MAX + 1 : MAT_ERR_DEPASSEMENT
+=== Exercice 3 : multiplication ===
+[OK]    (3.e) (2 x 3) x (2 x 3) : MAT_ERR_DIMENSIONS
+[OK]    (3.h) (2 x 3) x (3 x 2) : MAT_OK
+[OK]    (3.g) a x c = (58 64 / 139 154)
+[OK]    (3.f) (3 x 2) x (2 x 3) donne une matrice 3 x 3
+[OK]    a et c n'ont pas ete modifiees
+[OK]    (3.g) 2 x 10^10 depasse INT_MAX : MAT_ERR_DEPASSEMENT
+=== Exercice 3 : cas particuliers ===
+[OK]    resultat = entree refuse, a reste intacte
+[OK]    (3.f) echec d'allocation : MAT_ERR_ALLOCATION, r vide
+
+Bilan : 14 / 14 verifications reussies.
+```
 
 ## 5. Vérifications mémoire
 
