@@ -640,6 +640,73 @@ Sortie console obtenue lors de l'exécution de `test_ex3` :
 Bilan : 14 / 14 verifications reussies.
 ```
 
+
+### 4.4 Exercice 4 : Démonstration complète
+
+Cet exercice assemble tous les exercices / fonctions développées pour faire la démonstration finale : `demo_matrices`. La démonstration prend ses arguments depuis le terminal, lit et initialise en mémoire les matrices $A$ et $B$ depuis des fichiers texte, fait l'opération demandée (`add` ou `mul`), affiche les matrices et le résultat si tout c'est bien passé, enregistre la matrice finale $R$ dabns un fichier texte, et libère l'intégralité de la mémoire allouée, gère les erreurs en cas d'echec...
+
+#### 1. Code écrit et commenté
+
+##### Étape 4.a — Affichage des matrices en entrée (`main.c`)
+Une fois les deux matrices chargées sans erreur, on les affiche avec `mat_afficher` avec leurs noms : `"A"` et `"B"`.
+
+```c
+    mat_afficher("A", &a);
+    mat_afficher("B", &b);
+```
+
+##### Étape 4.b — Calcul du résultat et gestion des erreurs (`main.c`)
+En fonction de lopération, (mémorisée dans `addition`), on appelle `mat_additionner` ou `mat_multiplier`. En cas d'erreur, on affiche un message sur `stderr`, les dimensions des opérandes, et on saute vers la balise `nettoyage` avec `goto`.
+
+```c
+    MatErreur err = addition ? mat_additionner(&a, &b, &r)
+                             : mat_multiplier(&a, &b, &r);
+    if (err != MAT_OK) {
+        fprintf(stderr, "Erreur calcul impossible : %s ",
+                mat_message_erreur(err));
+        fprintf(stderr, "(A: %d x %d, B: %d x %d)\n",
+                a.nb_lignes, a.nb_colonnes,
+                b.nb_lignes, b.nb_colonnes);
+        goto nettoyage;
+    }
+```
+
+##### Étape 4.c — Affichage de la matrice résultat (`main.c`)
+On affiche la matrice obtenue $R$ et l'opération effectuée (`"R = A + B"` ou `"R = A x B"`).
+
+```c
+    const char *expression = addition ? "R = A + B" : "R = A x B";
+    mat_afficher(expression, &r);
+```
+
+##### Étape 4.d — Confirmation et statut de succès (`main.c`)
+Une fois la sauvegarde réussie dans le fichier texte, on envoie un message sur la sortie standard et on affecte `EXIT_SUCCESS` au statut de sortie qui sera retourné en fin de programme. 
+
+```c
+    printf("Résultat enregistré dans \"%s\".\n", argv[4]);
+    statut = EXIT_SUCCESS;
+```
+
+---
+
+#### 2. Réponses aux questions de réflexion (sujet 6.6)
+
+- **Q6.1 Pourquoi le message d'erreur est-il affiché par `main.c` (ou ses fonctions `static`) et non par `mat_lire` ? Pensez à un programme graphique qui réutiliserait la bibliothèque.**  
+  La bibliothèque est faite pour être réutilisée et elle ne doit donc pas imposer de sortie console en cas d'erreur. Elle doit simplement renvoyer un code d'erreur (ici c'est `MatErreur`) pour laisser la liberté à l'appellant (le client qui se sert de notre API) sur la manière dont il doit réagir. 
+  
+  Par exemple, si la bibliothèque était intégrée dans une application avec un GUI, afficher du texte en terminal ne serait pas utile. En revanche, l'application peut récupérer le code d'erreur et afficher un message en popup personnalisé en fonction de l'erreur dans l'interface graphique.
+
+- **Q6.2 Pourquoi le résultat de `fclose` est-il testé dans `sauvegarder` mais pas dans `charger` ?**  
+  Sauvegarder est une fonction en écriture alors que charger est une fonction en lecture.
+
+  Les données qu'on écrit avec `fprintf` passent par un buffer. Comme évoqué précédemment, c'est à la fermeture du flux (avec `fclose`) que le système essaie d'écrire définitivement ces données : si il y a une erreur c'est donc `fclose` renverra une erreur. 
+
+  En lecture, une fois que les données sont en mémoire, `fclose` libère juste la mémoire : même si `fclose` échouait, le contenu déjà extrait en mémoire reste valide et utilisable.
+
+- **Q6.3 Dans le scénario 8, le calcul a réussi mais l'enregistrement a échoué. Combien de matrices faut-il libérer ? Vérifiez que votre programme le fait.**  
+  Il faut libérer les 3 matrices : $A$, $B$ et $R$. On libère les matrices au niveau du label `nettoyage:` vers lequel on saute en cas d'erreur dans `sauvegarder`. A cette étape, les variables `a`, `b` et `r` sont déjà allouées, donc on appelle `mat_detruire(&r)`, `mat_detruire(&b)` et `mat_detruire(&a)` pour éviter les fuites mémoires.
+---
+
 ## 5. Vérifications mémoire
 
 Pour garantir l'absence de fuite mémoire, on a testé tous les programmes avec Valgrind (option `--leak-check=full`).
