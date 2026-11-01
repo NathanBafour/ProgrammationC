@@ -21,7 +21,7 @@
    - [3.2 Graphe des inclusions et gardes](#32-graphe-des-inclusions-et-gardes)
    - [3.3 Règles de propriété mémoire](#33-règles-de-propriété-mémoire)
    - [3.4 Choix techniques et implémentation](#34-choix-techniques-et-implémentation)
-   - [3.5 Compilation et automatisation (Makefile)](#35-compilation-et-automatisation-makefile)
+   - [3.5 Compilation et automatisation (Makefile)](#35-automatisation-de-la-compilation-makefile)
 4. [Réalisation et validation exercice par exercice](#4-réalisation-et-validation-exercice-par-exercice)
    - [4.1 Exercice 1 : Allocation et destruction](#41-exercice-1--allocation-et-destruction)
    - [4.2 Exercice 2 : Entrées-sorties](#42-exercice-2--entrées-sorties)
@@ -166,9 +166,9 @@ Pour êtrte certain de l'abscence de fuites mémoires, le projet applique les se
 La compilation du projet est faite automatiquement à partir d'un `Makefile`
 
 #### Explication
-
-* `commande = gcc` : compilateur C utilisé.
-* `flags = -std=c11 -Wall -Wextra -Wpedantic -g` : options de compilation (avertissements stricts, etc)
+Variables de compilation:
+* `CC = gcc` : compilateur C utilisé.
+* `CFLAGS = -std=c11 -Wall -Wextra -Wpedantic -g` : options de compilation (avertissements stricts, etc)
 * `test = -DMAT_TEST_ALLOC` : simulation des échecs mémoires.
 
 #### Commandes disponbles
@@ -183,30 +183,31 @@ La compilation du projet est faite automatiquement à partir d'un `Makefile`
 #### Contenu du Makefile
 
 ```makefile
-commande = gcc
-flags = -std=c11 -Wall -Wextra -Wpedantic -g
+CC = gcc
+CFLAGS = -std=c11 -Wall -Wextra -Wpedantic -g
 test = -DMAT_TEST_ALLOC
 
-# Quand on fait juste "make" on les compile tous :
+#Quand on fait juste "make" on les compile tous:
 all: demo_matrices test_ex1 test_ex2 test_ex3
 
-# make demo_matrices
+#make demo_matrices
 demo_matrices: main.c matrice.c matrice_alloc.c matrice_io.c matrice_calcul.c
-	$(commande)$(flags) $^ -o$@
+	$(CC) $(CFLAGS) $^ -o $@
 
-# make test_ex1
+#make test_ex1
 test_ex1: test_ex1.c matrice.c matrice_alloc.c
-	$(commande) $(flags)$(test) $^ -o$@
+	$(CC) $(CFLAGS) $(test) $^ -o $@
 
-# make test_ex2
+#make test_ex2
 test_ex2: test_ex2.c matrice.c matrice_alloc.c matrice_io.c
-	$(commande) $(flags)$(test) $^ -o$@
+	$(CC) $(CFLAGS) $(test) $^ -o $@
 
-# make test_ex3
+#make test_ex3
 test_ex3: test_ex3.c matrice.c matrice_alloc.c matrice_calcul.c
-	$(commande) $(flags)$(test) $^ -o$@
+	$(CC) $(CFLAGS) $(test) $^ -o $@
 
-# make clean
+.PHONY: clean
+#make clean
 clean:
 	rm -f demo_matrices test_ex1 test_ex2 test_ex3
 ```
@@ -911,12 +912,12 @@ Pour résoudre ce problème, la solution proposée par le sujet était d'utilsie
 
 ### Répartition du travail
 - **Matthieu BAILS--AZAMA** : Exercices 2 et 3
-- **Nathan BAFOUR** : Exercice 1 et rédaction du compte rendu
+- **Nathan BAFOUR** : Exercice 1, Makefile et rédaction du compte rendu
 - **Gabin GIRODON :** Exercice 4 et rédaction du compte rendu 
 - **Tous :** Relecture et compréhension de la partie des autres, et relecture totale du compte rendu.
 
 
 ### Aides extérieures
 - **IA :** utilisé comme assistant d'explication (`man`) pour clarifier les points conceptuellement difficiles à comprendre (dépassement d'entier, compréhension des niveaux d'indirection du mot-clé `const`), ainsi que pour la relecture et la correction de l'orthographe du compte-rendu.
-- **Articles & Pages WEB** : En particulier [cette page WEB sur les pièges du développement C](https://nicolasj.developpez.com/articles/pieges/)
+- **Articles & Pages WEB** : En particulier [cette page WEB sur les pièges du développement C](https://nicolasj.developpez.com/articles/pieges/) et [celle-ci pour comprendre le Makefile](https://dev.to/ashcript/comprendre-le-makefile-exemple-avec-le-langage-c-47n9)
 - **Forums** : Stack Overflow et Reddit
