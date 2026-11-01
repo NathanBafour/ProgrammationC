@@ -1001,6 +1001,6 @@ Pour résoudre ce problème, la solution proposée par le sujet était d'utilsie
 
 
 ### Aides extérieures
-- **IA :** utilisé comme assistant d'explication (`man`) pour clarifier les points conceptuellement difficiles à comprendre (dépassement d'entier, compréhension des niveaux d'indirection du mot-clé `const`), ainsi que pour la relecture et la correction de l'orthographe du compte-rendu.
+- **IA :** utilisé comme assistant (`man`) pour clarifier les points conceptuellement difficiles à comprendre (dépassement d'entier, compréhension des niveaux d'indirection du mot-clé `const`), pour la relecture et la correction de l'orthographe du compte-rendu, et pour la transcription de schémas manuscrits en diagrmmes mermaid.
 - **Articles & Pages WEB** : En particulier [cette page WEB sur les pièges du développement C](https://nicolasj.developpez.com/articles/pieges/) et [celle-ci pour comprendre le Makefile](https://dev.to/ashcript/comprendre-le-makefile-exemple-avec-le-langage-c-47n9)
 - **Forums** : Stack Overflow et Reddit
