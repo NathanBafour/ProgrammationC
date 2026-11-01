@@ -108,6 +108,9 @@ ProgrammationC/
 *   **`test_ex1.c`, `test_ex2.c`, `test_ex3.c` :** 
     tests des exercices (fournis).
 
+### Schéma des modules
+
+```mermaid
 graph TD
     subgraph Application
         M[main.c]
@@ -130,9 +133,11 @@ graph TD
     IO -->|utilise type Matrice et erreurs| BASE
     CALC -->|utilise type Matrice et erreurs| BASE
     M -->|détruit les matrices| ALLOC
+```
+*Figure 1 : Schéma fonctionnel des modules et dépendances d'appels entre composants*
 
-*Figure 1 : Schéma des modules*
 ### 3.2 Graphe des inclusions et gardes
+
 ```mermaid
 graph TD
     main.c --> matrice.h
@@ -154,6 +159,7 @@ graph TD
     matrice_calcul.c --> matrice_alloc.h
 ```
 *Figure 2 : Graphe des inclusions généré à partir des dépendances (gcc -MM)*
+
 
 #### Rôle du garde `#ifndef`
 
