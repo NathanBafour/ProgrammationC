@@ -112,29 +112,16 @@ ProgrammationC/
 
 ```mermaid
 graph TD
-    subgraph Application
-        M[main.c]
-    end
-
-    subgraph "Bibliothèque matricielle"
-        IO[matrice_io]
-        CALC[matrice_calcul]
-        ALLOC[matrice_alloc]
-        BASE[matrice]
-    end
-
-    M -->|lit / affiche / sauvegarde| IO
-    M -->|calcule addition / multiplication| CALC
-    
-    IO -->|alloue les structures en lecture| ALLOC
-    CALC -->|alloue la matrice résultat| ALLOC
-    
-    ALLOC -->|utilise type Matrice et constantes| BASE
-    IO -->|utilise type Matrice et erreurs| BASE
-    CALC -->|utilise type Matrice et erreurs| BASE
-    M -->|détruit les matrices| ALLOC
+    main --> matrice_io
+    main --> matrice_calcul
+    main --> matrice_alloc
+    matrice_io --> matrice_alloc
+    matrice_io --> matrice
+    matrice_calcul --> matrice_alloc
+    matrice_calcul --> matrice
+    matrice_alloc --> matrice
 ```
-*Figure 1 : Schéma fonctionnel des modules et dépendances d'appels entre  composants*
+*Figure 1 : Schéma de dépendances entre les modules*
 
 ### 3.2 Graphe des inclusions et gardes
 
