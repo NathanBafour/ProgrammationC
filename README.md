@@ -40,8 +40,7 @@
 ## 2. Introduction
 
 ### Contexte
-Ce TD a pour objectif de nous faire concevoir et implémenter une petite bibliothèque modulaire ayant pour but de manipuler, de stocker des matrices de dimensions variables, ainsi que d'effectuer des calculs dessus.
-
+L'objectif de ce TD était d'implémenter une bibliothèque modulaire en C pour manipuler et stocker des matrices avec des dimensions non imposées, tout en gérant la mémoire de façon propre.
 
 ### Objectifs du TD
 
@@ -427,7 +426,7 @@ On lit les entiers un par un grace à la fonction interne `lire_entier`. Si `lir
 ```
 
 ##### Étape 2.f — Lire : transférer le résultat (`mat_lire`)
-Une fois tous les entiers lus avec succès, on copie la structure temporaire dans `*res` (`*res = tmp;`). On renovie ensuite le code de succès MAT_OK.
+Une fois que tous les entiers ont été lus avec succès, on copie la structure tmp dans `*res` (`*res = tmp;`). On renovie ensuite le code de succès MAT_OK.
 
 ```c
     *res = tmp;
@@ -508,7 +507,7 @@ L'addition matricielle nécessite que les deux matrices soient aux mêmes dimens
 ```
 
 ##### Étape 3.b — Addition : réserver le résultat (`mat_additionner`)
-La matrice résultat `r` est locale et dimensionnée selon la taille de `a`. Si l'allocation échoue, on retourne une erreur sans toucher à `*res`.
+La matrice résultat `r` est locale et initialisée selon la taille de `a`. Si l'allocation échoue, on retourne une erreur sans toucher à `*res`.
 
 ```c
     err = mat_allouer(&r, a->nb_lignes, a->nb_colonnes);
@@ -517,7 +516,7 @@ La matrice résultat `r` est locale et dimensionnée selon la taille de `a`. Si 
 ```
 
 ##### Étape 3.c — Addition : calculer chaque coefficient (`mat_additionner`)
-On additionne les coefficients $(i, j)$ avec un transtypage ver  `long long`. De cette manière, si l'addition entraine un débordement, on libère immédiatement la mémoire allouée à `r` avant de sortir de la fonction en retournant l'erreur de dépassement d'entier, sans tronquer le résultat (et donc obtenir un résultat  faux).
+On additionne les coefficients $(i, j)$ avec un transtypage vers  `long long`. De cette manière, si l'addition entraine un débordement, on libère immédiatement la mémoire allouée à `r` avant de sortir de la fonction en retournant l'erreur de dépassement d'entier, sans tronquer le résultat (et donc obtenir un résultat faux).
 
 ```c
     long long s = (long long)a->coef[i][j] + b->coef[i][j];
@@ -537,7 +536,7 @@ Quand tous les coefficients ont été calculés, on transfère le resultat à la
 ```
 
 ##### Étape 3.e — Multiplication : contrôler les dimensions (`mat_multiplier`)
-Le produit matriciel $A \times B$ n'est possible que si le nombre de colonnes de la première matrice est égal au nombre de lignes de la deuxieme matrice. On gère donc les éventuelles erreurs.
+Le produit $A \times B$ n'est possible que si le nombre de colonnes de la première matrice est égal au nombre de lignes de la deuxieme matrice. On gère donc les éventuelles erreurs.
 
 ```c
     if (a->nb_colonnes != b->nb_lignes)
@@ -545,7 +544,7 @@ Le produit matriciel $A \times B$ n'est possible que si le nombre de colonnes de
 ```
 
 ##### Étape 3.f — Multiplication : réserver le résultat (`mat_multiplier`)
-Pour un produit entre deux matrices compatibles : $(n \times p) \times (p \times q)$, la matrice produite possède $n$ lignes et $q$ colonnes. On réserve donc la matrice résultat locale $r$ aux dimensions `(a->nb_lignes, b->nb_colonnes)`.
+Pour un produit entre deux matrices compatibles : $(n \times p) \times (p \times q)$, la matrice produite possède $n$ lignes et $q$ colonnes. On initialise donc la matrice résultat locale $r$ aux dimensions `(a->nb_lignes, b->nb_colonnes)`.
 
 ```c
     err = mat_allouer(&r, a->nb_lignes, b->nb_colonnes);
@@ -617,7 +616,7 @@ De plus en C, le dépassement est interdit. Lors de la compilation, le compilate
 
 #### 3. Résultat des tests
 
-Sortie console obtenue lors de l'exécution de la suite de tests unitaires `test_ex3` :
+Sortie console obtenue lors de l'exécution de `test_ex3` :
 
 ```text
 === Exercice 3 : addition ===
@@ -754,7 +753,7 @@ Résultat console :
 
 On teste ici le programme `demo_matrices` sur différents scénarios comme demandé dans le sujet. 
 
-On présente ici 3 scénarios parmi les 10, dont 1 scénario d'erreur.
+On a intégré au compte rendu 4 scénarios, dont 2 scénarios d'erreur.
 
 ---
 
@@ -844,13 +843,13 @@ Le comportement obtenu est celui attendu : le programme effectue bien le bon cal
 
 ### 6.3 Scénario 3 : Scénario d'erreur — Addition avec dimensions incompatibles ($A + C$)
 
-Ce test vérifie le bon fonctionnement si on tente d'additionner la matrice $A$ ($4 \times 3$) et la matrice $C$ ($3 \times 2$). Le programme doit interdire l'opération car les dimensions sont incompatibles, renvoyer un message d'erreur sur `stderr`, ne créer aucun fichier et retourner un code d'échec.
+Ce test vérifie le bon fonctionnement si on tente d'additionner la matrice $A$ ($4 \times 3$) et la matrice $C$ ($3 \times 2$). Le programme doit interdire l'opération car les dimensions sont incompatibles, renvoyer un message d'erreur sur la sortie d'erreur `stderr`, ne doit pas créer de fichier et doit retourner un code d'erreur (1).
 
 Il permet de valider :
-* la détection de l'incompatibilité des dimensions pour l'addition ($4 \times 3$ et $3 \times 2$) avant de tenter des calculs
+* la détection en cas de mauvaises dimensions pour l'addition ($4 \times 3$ et $3 \times 2$) avant de tenter des calculs
 * le bon fonctionnement du systeme de message d'erreur 
 * la non création / écrasement du fichier de sortie `R.txt`
-* le `goto nettoyage;` qui assure la libération de $A$ et de $B$ sans fuite mémoire
+* le `goto nettoyage;` qui permet de bien libérer $A$ et $B$ sans fuite mémoire
 * le renvoi du code de retour `1` en cas d'erreur
 
 **Commande exécutée :**
@@ -906,9 +905,9 @@ Ce projet nous a permis de mettre en oeuvre des notions évoquées en TD (progra
 La principale difficulté a concerné la compréhension de la notion de dépassements d'entiers, et de la méthode pour contrer ce phénomène. Nous pensions initialement qu'il suffisait d'effectuer le calcul et de comparer le résultat avec les opérandes pour vérifier s'il avait été tronqué. Nous avons compris que le dépassement sur un entier est un comportement indéfini que le compilateur optimise en supprimant le test que nous aurions alors voulu mettre en place, (et qui devient en plus faux si des valeurs sont négatives). 
 Pour résoudre ce problème, la solution proposée par le sujet était d'utilsier un transtypage en `long long` puis d'ajouter un contrôle d'écrire le nouveau coefficient.
 
- Une seconde difficulté a été la gestion des échecs partiels d'allocation dans `mat_allouer`, résolue en désallouant méthodiquement toutes les lignes déjà réservées avant de libérer le tableau de pointeurs pour éviter toute fuite sous Valgrind.
+ Une seconde difficulté a été la gestion des échecs au cours de l'allocation dans `mat_allouer`, pour laquelle on désalloue toutes les lignes déjà réservées avant de libérer le tableau de pointeurs pour éviter toute fuite mémoire.
 
- La question de reflexion sur `const` nous a également permis de nous pencher sur le fonctionnement en profondeur de ce qualificateur.
+ La question de reflexion sur `const` nous a également permis de nous pencher sur son fonctionnement et sur les pointeurs plus complexes.
 
 ### Répartition du travail
 - **Matthieu BAILS--AZAMA** : Exercices 2 et 3
