@@ -134,7 +134,7 @@ graph TD
     CALC -->|utilise type Matrice et erreurs| BASE
     M -->|détruit les matrices| ALLOC
 ```
-*Figure 1 : Schéma fonctionnel des modules et dépendances d'appels entre composants*
+*Figure 1 : Schéma fonctionnel des modules et dépendances d'appels entre  composants*
 
 ### 3.2 Graphe des inclusions et gardes
 
