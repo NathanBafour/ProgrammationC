@@ -108,6 +108,30 @@ ProgrammationC/
 *   **`test_ex1.c`, `test_ex2.c`, `test_ex3.c` :** 
     tests des exercices (fournis).
 
+graph TD
+    subgraph Application
+        M[main.c]
+    end
+
+    subgraph "Bibliothèque matricielle"
+        IO[matrice_io]
+        CALC[matrice_calcul]
+        ALLOC[matrice_alloc]
+        BASE[matrice]
+    end
+
+    M -->|lit / affiche / sauvegarde| IO
+    M -->|calcule addition / multiplication| CALC
+    
+    IO -->|alloue les structures en lecture| ALLOC
+    CALC -->|alloue la matrice résultat| ALLOC
+    
+    ALLOC -->|utilise type Matrice et constantes| BASE
+    IO -->|utilise type Matrice et erreurs| BASE
+    CALC -->|utilise type Matrice et erreurs| BASE
+    M -->|détruit les matrices| ALLOC
+
+*Figure 1 : Schéma des modules*
 ### 3.2 Graphe des inclusions et gardes
 ```mermaid
 graph TD
@@ -129,7 +153,7 @@ graph TD
     matrice_calcul.c --> matrice.h
     matrice_calcul.c --> matrice_alloc.h
 ```
-*Figure 1 : Graphe des inclusions généré à partir des dépendances (gcc -MM)*
+*Figure 2 : Graphe des inclusions généré à partir des dépendances (gcc -MM)*
 
 #### Rôle du garde `#ifndef`
 
